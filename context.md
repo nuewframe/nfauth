@@ -1,0 +1,177 @@
+# okta-client — Project Context
+
+## Purpose
+
+`okta-client` is a standalone Deno CLI for Okta authentication and token management.
+It implements OAuth 2.0 / OIDC flows and writes tokens to `~/.nuewframe/credential.json`
+so that other tools (`gql-client`, scripts, CI pipelines) can consume them without
+re-authenticating.
+
+## Architecture
+
+```
+main.ts                    CLI entry point; registers all commands with Cliffy
+commands/                  One file per subcommand
+  auth.ts                  PKCE auth-url generation + code exchange
+  login.ts                 Direct username/password login (masked stdin)
+  login-browser.ts         Browser-based PKCE login (CDP / callback / paste)
+  client-credentials.ts    Machine-to-machine client_credentials grant
+  user-info.ts             Fetch user profile from /userinfo endpoint
+  decode-token.ts          Decode and inspect JWT claims + expiry
+  config.ts                Manage ~/.nuewframe/config.yaml (init/show/add/set-default/list)
+  get.ts                   Print raw token values (e.g. get access-token)
+config/
+  app.config.ts            Load/save ~/.nuewframe/config.yaml, type definitions
+services/
+  okta.service.ts          Core OAuth/OIDC HTTP calls (pure fetch, no SDK)
+  okta-login.service.ts    Direct login via @okta/okta-auth-js (IDX API)
+utils/
+  credentials.ts           Load/save ~/.nuewframe/credential.json
+  jwt.ts                   Pure-JS JWT header/payload decoder (no verification)
+  logger.ts                Logger class (none/info/debug levels) → stdout
+  pkce.ts                  RFC 7636 PKCE (verifier, S256 challenge, state helpers)
+  cdp.ts                   Chrome DevTools Protocol automation for browser login
+  okta-service-options.ts  Build OktaConfig from OktaEnvironment
+```
+
+## Integration Contract
+
+This tool **writes** `~/.nuewframe/credential.json`. Any tool that needs an Okta token
+reads the `access_token` field from this file.
+
+Credential schema:
+```json
+{
+  "access_token": "eyJ...",
+  "id_token": "eyJ...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "scope": "openid profile email",
+  "refresh_token": "...",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+Credential location: `~/.nuewframe/credential.json`
+
+## Config File
+
+Location: `~/.nuewframe/config.yaml`
+
+```yaml
+okta:
+  environments:
+    dev:
+      default:
+        domain: https://your-okta-domain.okta.com
+        clientId: your-client-id
+        apiToken: your-api-token
+        redirectUri: http://localhost:7879/callback
+        scope: openid profile email
+current:
+  env: dev
+  namespace: default
+```
+
+- `env` selects the top-level key under `okta.environments`
+- `namespace` selects the key under `okta.environments.<env>`
+- Commands accept `--env` and `--namespace` to override `current`
+
+## Key Files
+
+| File | Role |
+|------|------|
+| `deno.json` | Package manifest: `@nuewframe/okta-client` v1.0.1, imports map, tasks |
+| `main.ts` | Export `mainCommand`; entry point when `import.meta.main` |
+| `config/app.config.ts` | `loadConfig()`, `parseConfig()`, `getEnvironmentConfig()` |
+| `utils/credentials.ts` | `loadCredentials()`, `saveCredentials()` |
+| `utils/pkce.ts` | `generateCodeVerifier()`, `generateCodeChallenge()` |
+| `services/okta.service.ts` | `getAuthorizeUrl()`, `exchangeCodeForTokens()`, `getClientCredentialsTokens()`, `getUserInfo()` |
+| `services/okta-login.service.ts` | `loginWithCredentials()` using @okta/okta-auth-js |
+
+## Command Surface Summary
+
+```
+okta-client auth-url                     Generate PKCE authorization URL
+okta-client auth-url exchange-code CODE  Exchange auth code for tokens
+okta-client login USERNAME               Direct login with password prompt
+okta-client login-browser                Browser PKCE flow (CDP/callback/paste)
+okta-client client-credentials           Machine-to-machine token
+okta-client user-info [TOKEN]            Fetch user profile
+okta-client decode [TOKEN]               Decode JWT claims
+okta-client config init                  Initialize config directory
+okta-client config show                  Show current config
+okta-client config add                   Add an environment interactively
+okta-client config set-default --env ENV Set default environment/namespace
+okta-client config list                  List all environments
+okta-client get access-token             Print raw access token
+```
+
+## Technology Stack
+
+| Concern | Library |
+|---------|---------|
+| CLI framework | `@cliffy/command@^1.0.0` |
+| YAML (config) | `@std/yaml@^1.0.12` |
+| Assertions (tests) | `@std/assert@^1.0.19` |
+| Okta IDX login | `@okta/okta-auth-js@^8.0.0` |
+| Runtime | Deno 2.0+, TypeScript 5, strict mode |
+
+## Permissions
+
+| Permission | Reason |
+|-----------|--------|
+| `--allow-env` | Home directory (`HOME`/`USERPROFILE`) and env var reads |
+| `--allow-net` | HTTP/HTTPS calls to Okta endpoints |
+| `--allow-read` | Read config and credential files |
+| `--allow-write` | Write credential and config files |
+| `--allow-run` | Browser open OS command (login-browser only) |
+
+## Test Coverage
+
+Tests live alongside the source (same directory as source files):
+
+| File | Tests | Covers |
+|------|-------|--------|
+| `main_test.ts` | 6 | Command registration smoke tests |
+| `config/app.config_test.ts` | 7 | Config loading, validation, env var parsing |
+| `services/okta.service_test.ts` | 6 | URL building, token exchange logic |
+| `services/okta-login.service_test.ts` | 8 | Direct login flow, error cases |
+
+Run: `deno task test`  
+Total: 27 tests, all passing.
+
+## Security Invariants
+
+1. Passwords are **never** accepted as CLI flags — masked stdin only
+2. Tokens in logs are always abbreviated: `token.substring(0, 6) + '...'`
+3. API tokens and client secrets are never logged at any level
+4. Credentials are read/written via file I/O, not env vars
+5. Service calls use PKCE (`S256`) or client_credentials — no implicit flow
+
+## Modernization Audit (Deno 2 / TypeScript 5)
+
+**Last audited:** 2025-07-25 | **Runtime:** Deno 2.7.x | **TypeScript:** 5.9.x
+
+### Dependency Status
+
+| Package | Version | Status |
+|---------|---------|--------|
+| `@cliffy/command` | `^1.0.0` | ✅ Current — Cliffy 1.x stable on JSR |
+| `@std/assert` | `^1.0.19` | ✅ Current |
+| `@std/cli` | `^1.0.0` | ✅ Current |
+| `@std/yaml` | `^1.0.12` | ✅ Current |
+| `@okta/okta-auth-js` | `^8.0.0` | ✅ Current — major v8 (IDX API) |
+
+### Deprecated API Sweep
+
+- No usage of `Deno.Buffer`, `Deno.copy`, `Deno.readAll`, `Deno.writeAll`
+- No usage of removed `std/encoding`, `std/io` (pre-2.0) modules
+- No `https://` import URLs in source — all via `deno.json` imports map
+- No `// deno-lint-ignore` or `// deno-ts-ignore` suppressions
+
+### Ongoing Recommendations
+
+- Upgrade `@okta/okta-auth-js` to latest v8 patch when a new minor is released
+- Run `deno outdated` periodically to surface new JSR patch versions
+- Consider adding `"nodeModulesDir": false` to `deno.json` once all npm deps support it (reduces disk footprint in CI)

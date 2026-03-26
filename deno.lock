@@ -1,0 +1,134 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@cliffy/command@1": "1.0.0",
+    "jsr:@cliffy/flags@1.0.0": "1.0.0",
+    "jsr:@cliffy/internal@1.0.0": "1.0.0",
+    "jsr:@cliffy/table@1.0.0": "1.0.0",
+    "jsr:@std/assert@^1.0.19": "1.0.19",
+    "jsr:@std/fmt@^1.0.9": "1.0.9",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
+    "jsr:@std/text@^1.0.17": "1.0.17",
+    "jsr:@std/yaml@^1.0.12": "1.0.12",
+    "npm:@okta/okta-auth-js@8": "8.0.0"
+  },
+  "jsr": {
+    "@cliffy/command@1.0.0": {
+      "integrity": "c52a241ea68857fcdaff4f3173eb404f8017d7bc35553b6f533c592b89dde7d2",
+      "dependencies": [
+        "jsr:@cliffy/flags",
+        "jsr:@cliffy/internal",
+        "jsr:@cliffy/table",
+        "jsr:@std/fmt",
+        "jsr:@std/text"
+      ]
+    },
+    "@cliffy/flags@1.0.0": {
+      "integrity": "8b57698adc644da8f90422d58976362d41a4ebca39c312ca1c101585d0148feb",
+      "dependencies": [
+        "jsr:@cliffy/internal",
+        "jsr:@std/text"
+      ]
+    },
+    "@cliffy/internal@1.0.0": {
+      "integrity": "1e17ccbcd5420093c0a93e5b3827bbdc9abac5195bacf187edc44665e54bdde6"
+    },
+    "@cliffy/table@1.0.0": {
+      "integrity": "3fdaa9e1ef1ea62022108adabd826932bdea8dd05497079896febcd41322907f",
+      "dependencies": [
+        "jsr:@std/fmt"
+      ]
+    },
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/fmt@1.0.9": {
+      "integrity": "2487343e8899fb2be5d0e3d35013e54477ada198854e52dd05ed0422eddcabe0"
+    },
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    },
+    "@std/text@1.0.17": {
+      "integrity": "4b2c4ef67ae5b6c1dfd447c81c83a43718f52e3c7e748d8b33f694aba9895f95"
+    },
+    "@std/yaml@1.0.12": {
+      "integrity": "7deabca4545bcedd07c5f69ea53acea71b8b4c67562f224e17b90d75944cb20c"
+    }
+  },
+  "npm": {
+    "@babel/runtime@7.28.6": {
+      "integrity": "sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA=="
+    },
+    "@okta/okta-auth-js@8.0.0": {
+      "integrity": "sha512-uy35IaC9Mz02pB6lCU4tIXw92SSq+BiY+jAhxpde/TJwDXbghCeXBPOZyqoihVAV3gSILpu4M15MDuBLRUPo+Q==",
+      "dependencies": [
+        "@babel/runtime",
+        "broadcast-channel",
+        "js-cookie",
+        "node-cache",
+        "tiny-emitter"
+      ]
+    },
+    "broadcast-channel@7.3.0": {
+      "integrity": "sha512-UHPhLBQKfQ8OmMFMpmPfO5dRakyA1vsfiDGWTYNvChYol65tbuhivPEGgZZiuetorvExdvxaWiBy/ym1Ty08yA==",
+      "dependencies": [
+        "@babel/runtime",
+        "oblivious-set",
+        "p-queue",
+        "unload"
+      ]
+    },
+    "clone@2.1.2": {
+      "integrity": "sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w=="
+    },
+    "eventemitter3@4.0.7": {
+      "integrity": "sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw=="
+    },
+    "js-cookie@3.0.5": {
+      "integrity": "sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw=="
+    },
+    "node-cache@5.1.2": {
+      "integrity": "sha512-t1QzWwnk4sjLWaQAS8CHgOJ+RAfmHpxFWmc36IWTiWHQfs0w5JDMBS1b1ZxQteo0vVVuWJvIUKHDkkeK7vIGCg==",
+      "dependencies": [
+        "clone"
+      ]
+    },
+    "oblivious-set@2.0.0": {
+      "integrity": "sha512-QOUH5Xrsced9fKXaQTjWoDGKeS/Or7E2jB0FN63N4mkAO4qJdB7WR7e6qWAOHM5nk25FJ8TGjhP7DH4l6vFVLg=="
+    },
+    "p-finally@1.0.0": {
+      "integrity": "sha512-LICb2p9CB7FS+0eR1oqWnHhp0FljGLZCWBE9aix0Uye9W8LTQPwMTYVGWQWIw9RdQiDg4+epXQODwIYJtSJaow=="
+    },
+    "p-queue@6.6.2": {
+      "integrity": "sha512-RwFpb72c/BhQLEXIZ5K2e+AhgNVmIejGlTgiB9MzZ0e93GRvqZ7uSi0dvRF7/XIXDeNkra2fNHBxTyPDGySpjQ==",
+      "dependencies": [
+        "eventemitter3",
+        "p-timeout"
+      ]
+    },
+    "p-timeout@3.2.0": {
+      "integrity": "sha512-rhIwUycgwwKcP9yTOOFK/AKsAopjjCakVqLHePO3CC6Mir1Z99xT+R63jZxAT5lFZLa2inS5h+ZS2GvR99/FBg==",
+      "dependencies": [
+        "p-finally"
+      ]
+    },
+    "tiny-emitter@2.1.0": {
+      "integrity": "sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q=="
+    },
+    "unload@2.4.1": {
+      "integrity": "sha512-IViSAm8Z3sRBYA+9wc0fLQmU9Nrxb16rcDmIiR6Y9LJSZzI7QY5QsDhqPpKOjAn0O9/kfK1TfNEMMAGPTIraPw=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@cliffy/command@1",
+      "jsr:@std/assert@^1.0.19",
+      "jsr:@std/cli@1",
+      "jsr:@std/yaml@^1.0.12",
+      "npm:@okta/okta-auth-js@8"
+    ]
+  }
+}
