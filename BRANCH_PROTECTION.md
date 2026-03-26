@@ -63,9 +63,9 @@ Under **Settings → General**, configure:
 
 Under **Settings → Actions → General → Workflow permissions**:
 
-| Setting                                                   | Value       |
-| --------------------------------------------------------- | ----------- |
-| Allow GitHub Actions to create and approve pull requests   | ✅ enabled  |
+| Setting                                                  | Value      |
+| -------------------------------------------------------- | ---------- |
+| Allow GitHub Actions to create and approve pull requests | ✅ enabled |
 
 > Required for `release-please` to open Release PRs automatically.
 > Without it the release workflow fails with:
