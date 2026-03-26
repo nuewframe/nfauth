@@ -10,25 +10,16 @@ Managing Okta tokens from the command line is clunky. `okta-client` makes it one
 
 ## Install
 
-### macOS (Apple Silicon)
-
 ```bash
-curl -fsSL https://github.com/nuewframe/okta-client/releases/latest/download/okta-client-mac-arm \
-  -o /usr/local/bin/okta-client && chmod +x /usr/local/bin/okta-client
+curl -fsSL https://raw.githubusercontent.com/nuewframe/okta-client/main/install.sh | sh
 ```
 
-### macOS (Intel)
+Auto-detects your platform (macOS arm64/x64, Linux x64) and installs to `/usr/local/bin`.
+Set `INSTALL_DIR` or `VERSION` to override:
 
 ```bash
-curl -fsSL https://github.com/nuewframe/okta-client/releases/latest/download/okta-client-mac-x64 \
-  -o /usr/local/bin/okta-client && chmod +x /usr/local/bin/okta-client
-```
-
-### Linux (x86_64)
-
-```bash
-curl -fsSL https://github.com/nuewframe/okta-client/releases/latest/download/okta-client-linux \
-  -o /usr/local/bin/okta-client && chmod +x /usr/local/bin/okta-client
+VERSION=v1.2.0 INSTALL_DIR=~/.local/bin \
+  curl -fsSL https://raw.githubusercontent.com/nuewframe/okta-client/main/install.sh | sh
 ```
 
 ### From source (Deno required)
