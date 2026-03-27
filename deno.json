@@ -19,6 +19,7 @@
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/cli": "jsr:@std/cli@^1.0.0",
+    "@std/path": "jsr:@std/path@^1.1.4",
     "@std/yaml": "jsr:@std/yaml@^1.0.12",
     "@okta/okta-auth-js": "npm:@okta/okta-auth-js@^8.0.0",
     "@cliffy/command": "jsr:@cliffy/command@^1.0.0"
