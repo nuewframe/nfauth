@@ -44,6 +44,15 @@ services/     Business logic (no CLI dependencies)
 utils/        Shared utilities (logger, jwt, pkce, credentials)
 ```
 
+## Engineering Workflow
+
+Follow a plan-before-code approach:
+
+- Define expected behavior and refactor targets in tests before writing implementation.
+- Preserve layer separation: commands compose, services implement business logic, utils support shared concerns.
+- After the first green test run, execute the planned refactor and rerun tests and quality checks.
+- Code is not done when only correct; it is done when clean, verified, and free of duplication.
+
 ## Adding a New Command
 
 See `.github/skills/new-command/SKILL.md` for the step-by-step guide.

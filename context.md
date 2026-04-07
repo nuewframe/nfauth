@@ -9,6 +9,9 @@ re-authenticating.
 
 ## Architecture
 
+Work top-down through the layers: commands are the composition/integration layer, services implement business logic, and utils provide shared support.
+Plan new behavior in tests first, then wire the command layer to the service and utility functions.
+
 ```
 main.ts                    CLI entry point; registers all commands with Cliffy
 commands/                  One file per subcommand

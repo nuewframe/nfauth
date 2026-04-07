@@ -171,6 +171,8 @@ deno task fmt                 # deno fmt
 deno task build:all           # compile all platform binaries
 ```
 
+Follow the repository workflow: define behavior in tests first, keep command wiring separate from service logic, and execute planned refactors after tests are green.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
