@@ -71,6 +71,16 @@ okta-client login code --url "<full-redirect-url>" [--env <env>] [--namespace <n
 Use this when the current machine cannot launch a browser or cannot host a callback.
 `login url` starts the flow and saves PKCE state. `login code` completes the token exchange.
 
+The pending login transaction stores:
+
+- environment and namespace
+- redirect URI and scope
+- PKCE verifier/challenge, state, and nonce
+- creation and expiry timestamps (10-minute validity window)
+
+`login code` validates and consumes this transaction, and requires matching env/namespace if you
+pass them explicitly.
+
 #### Direct username/password login (high-trust or legacy)
 
 ```bash
@@ -128,10 +138,18 @@ okta-client token userinfo --token <access-token>
 
 Queries the UserInfo endpoint using either the saved access token or a provided one.
 
+#### OAuth 2.0 vs OIDC outputs
+
+- `token access`: OAuth 2.0 bearer token for API authorization.
+- `token id`: OIDC identity token for client-side identity claims.
+- `token userinfo`: OIDC profile endpoint lookup using an access token.
+
+Use access tokens for API calls, and use ID token/userinfo only for identity/profile inspection.
+
 ### Configuration
 
 ```bash
-okta-client config init                 # create ~/.nuewframe/ with starter config
+okta-client config init                 # create ~/.nuewframe/okta-client/ with starter config
 okta-client config show                 # print current config as JSON
 okta-client config list                 # list all environments and namespaces
 okta-client config add <domain> <cid> <apitoken> --redirect-uri <uri>
@@ -146,12 +164,13 @@ All commands accept:
 | ------------------------------- | ------------------------------------------- |
 | `-e, --env <env>`               | Okta environment (overrides config default) |
 | `-n, --namespace <ns>`          | Config namespace (overrides config default) |
+| `--env-file <path>`             | Config YAML file path override              |
 | `-v, --verbose`                 | Enable debug output                         |
 | `--log-level none\|info\|debug` | Log verbosity level                         |
 
 ## Configuration
 
-`~/.nuewframe/config.yaml`:
+`~/.nuewframe/okta-client/config.yaml`:
 
 ```yaml
 okta:
@@ -203,7 +222,7 @@ query Me { me { id email } }
 
 ```bash
 deno task dev --help          # run from source
-deno task test                # run all tests (27 tests)
+deno task test                # run all tests
 deno task lint                # deno lint
 deno task fmt                 # deno fmt
 deno task build:all           # compile all platform binaries

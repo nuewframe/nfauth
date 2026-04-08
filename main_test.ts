@@ -2,10 +2,10 @@ import { assert, assertEquals, assertExists } from '@std/assert';
 
 import denoJson from './deno.json' with { type: 'json' };
 import { mainCommand } from './main.ts';
-import { loginCommand } from './commands/login.ts';
+import { loginCommand } from './commands/login/command.ts';
 import { serviceCommand } from './commands/service.ts';
 import { configCommand } from './commands/config.ts';
-import { tokenCommand } from './commands/token.ts';
+import { tokenCommand } from './commands/token/command.ts';
 
 Deno.test('Okta CLI - main module file exists', async () => {
   const filePath = new URL('./main.ts', import.meta.url);

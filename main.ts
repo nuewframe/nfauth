@@ -2,10 +2,31 @@
 
 import { Command } from '@cliffy/command';
 import denoJson from './deno.json' with { type: 'json' };
-import { loginCommand } from './commands/login.ts';
+import { loginCommand } from './commands/login/command.ts';
 import { serviceCommand } from './commands/service.ts';
 import { configCommand } from './commands/config.ts';
-import { tokenCommand } from './commands/token.ts';
+import { tokenCommand } from './commands/token/command.ts';
+
+function applyGlobalConfigPathOverride(args: string[]): void {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--env-file') {
+      const value = args[i + 1];
+      if (value) {
+        Deno.env.set('NUEWFRAME_CONFIG', value);
+      }
+      return;
+    }
+
+    if (arg.startsWith('--env-file=')) {
+      const value = arg.slice('--env-file='.length);
+      if (value) {
+        Deno.env.set('NUEWFRAME_CONFIG', value);
+      }
+      return;
+    }
+  }
+}
 
 const mainCommand = new Command()
   .name('okta-client')
@@ -25,7 +46,10 @@ const mainCommand = new Command()
   )
   .globalOption('-v, --verbose', 'Enable verbose output')
   .globalOption('--log-level <level:string>', 'Log level (none, info, debug)', { default: 'info' })
-  .globalOption('--config <config:string>', 'Path to config file')
+  .globalOption(
+    '--env-file <path:string>',
+    'Path to config YAML file (overrides ~/.nuewframe/okta-client/config.yaml)',
+  )
   .command('login', loginCommand)
   .command('service', serviceCommand)
   .command('token', tokenCommand)
@@ -36,6 +60,7 @@ export { mainCommand };
 
 if (import.meta.main) {
   try {
+    applyGlobalConfigPathOverride(Deno.args);
     await mainCommand.parse(Deno.args);
   } catch (error) {
     console.error(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
