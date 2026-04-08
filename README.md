@@ -222,9 +222,11 @@ query Me { me { id email } }
 
 ```bash
 deno task dev --help          # run from source
+deno task check               # fmt + lint + tests (same gate used by CI and pre-push)
 deno task test                # run all tests
 deno task lint                # deno lint
 deno task fmt                 # deno fmt
+deno task hooks               # install managed pre-push hook
 deno task build:all           # compile all platform binaries
 ```
 
