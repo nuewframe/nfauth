@@ -1,4 +1,7 @@
 import { assertEquals, assertNotEquals, assertStringIncludes } from '@std/assert';
+import { dirname, fromFileUrl } from '@std/path';
+
+const repoRoot = dirname(fromFileUrl(import.meta.url));
 
 function createJwt(payload: Record<string, unknown>): string {
   const header = { alg: 'none', typ: 'JWT' };
@@ -22,7 +25,7 @@ async function runCli(
       'main.ts',
       ...args,
     ],
-    cwd: '/Users/wael/proj/github/nuewframe/okta-client',
+    cwd: repoRoot,
     env: {
       ...Deno.env.toObject(),
       HOME: homeDir,
