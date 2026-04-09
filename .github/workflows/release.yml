@@ -49,7 +49,51 @@ jobs:
           fi
 
       - uses: actions/checkout@v6
-        if: ${{ steps.rp.outputs.release_created == 'true' }}
+        if: ${{ steps.rp.outputs.prs_created == 'true' || steps.rp.outputs.release_created == 'true' }}
+        with:
+          fetch-depth: 0
+
+      - uses: denoland/setup-deno@v2
+        if: ${{ steps.rp.outputs.prs_created == 'true' || steps.rp.outputs.release_created == 'true' }}
+        with:
+          deno-version: v2.x
+
+      - name: Normalize release PR changelog
+        if: ${{ steps.rp.outputs.prs_created == 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number="$(jq -r '.number // empty' <<< '${{ steps.rp.outputs.pr }}')"
+          if [[ -z "$pr_number" || "$pr_number" == "null" ]]; then
+            echo 'Release Please reported prs_created=true but did not provide a PR number.'
+            exit 1
+          fi
+
+          head_ref="$(gh pr view "$pr_number" --json headRefName --jq '.headRefName')"
+          if [[ -z "$head_ref" || "$head_ref" == "null" ]]; then
+            echo "Unable to resolve head branch for release PR #$pr_number."
+            exit 1
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$head_ref:$head_ref"
+          git checkout "$head_ref"
+
+          perl -0pi -e 's/^\* /- /mg' CHANGELOG.md
+          perl -0pi -e 's/\n### ⚠ BREAKING CHANGES\n\n- \n(?=\n### |\n## |\z)/\n/sg' CHANGELOG.md
+
+          deno fmt CHANGELOG.md
+
+          if git diff --quiet -- CHANGELOG.md; then
+            echo 'CHANGELOG.md already normalized.'
+            exit 0
+          fi
+
+          git add CHANGELOG.md
+          git commit -m 'chore(release): normalize changelog formatting'
+          git push origin "HEAD:$head_ref"
 
       - name: Normalize release title
         if: ${{ steps.rp.outputs.release_created == 'true' }}
@@ -65,6 +109,29 @@ jobs:
 
           tag='${{ steps.rp.outputs.tag_name }}'
           gh release edit "$tag" --title "$component: $tag"
+
+      - name: Sync release notes from changelog
+        if: ${{ steps.rp.outputs.release_created == 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag='${{ steps.rp.outputs.tag_name }}'
+          version="${tag#v}"
+          notes_file="$(mktemp)"
+
+          awk -v version="$version" '
+            $0 ~ "^## \\[" version "\\]" { capture=1; next }
+            capture && $0 ~ "^## \\[" { exit }
+            capture { print }
+          ' CHANGELOG.md > "$notes_file"
+
+          if [[ ! -s "$notes_file" ]]; then
+            echo "Failed to extract CHANGELOG section for $tag"
+            exit 1
+          fi
+
+          gh release edit "$tag" --notes-file "$notes_file"
 
   # ── Step 2: Build binaries and attach to the new release ───────────────────
   build:
