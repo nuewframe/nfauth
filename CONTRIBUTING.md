@@ -7,8 +7,8 @@ Thank you for your interest in contributing!
 1. Install [Deno](https://deno.land/) ≥ 2.0
 2. Clone the repo:
    ```bash
-   git clone https://github.com/nuewframe/okta-client.git
-   cd okta-client
+   git clone https://github.com/nuewframe/nfauth.git
+   cd nfauth
    ```
 3. Run from source:
    ```bash

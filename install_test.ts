@@ -45,14 +45,14 @@ Deno.test('install script dry-run resolves binary/tag/url/destination from env',
   const plan = parsePlan(stdout);
 
   assertEquals(plan.PLAN_PROJECT, 'Nuewframe OAuth CLI');
-  assertEquals(plan.PLAN_REPO, 'nuewframe/okta-client');
+  assertEquals(plan.PLAN_REPO, 'nuewframe/nfauth');
   assertEquals(plan.PLAN_BINARY, 'nfauth');
   assertEquals(plan.PLAN_TAG, 'v1.1.1');
   assertEquals(plan.PLAN_PLATFORM, 'linux-x64');
   assertEquals(plan.PLAN_ASSET, 'nfauth-linux-x64');
   assertEquals(
     plan.PLAN_URL,
-    'https://github.com/nuewframe/okta-client/releases/download/v1.1.1/nfauth-linux-x64',
+    'https://github.com/nuewframe/nfauth/releases/download/v1.1.1/nfauth-linux-x64',
   );
   assertEquals(plan.PLAN_DEST, '/tmp/nfauth-bin/nfauth');
 

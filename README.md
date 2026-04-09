@@ -1,6 +1,6 @@
 # Nuewframe OAuth CLI
 
-[![CI](https://github.com/nuewframe/okta-client/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nuewframe/okta-client/actions/workflows/ci.yml)
+[![CI](https://github.com/nuewframe/nfauth/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nuewframe/nfauth/actions/workflows/ci.yml)
 
 A Deno CLI for OAuth 2.0 / OIDC authentication and token management. It writes tokens to `~/.nuewframe/credential.json` for use by other tools.
 
@@ -11,7 +11,7 @@ Managing OAuth/OIDC tokens from the command line is clunky. `nfauth` streamlines
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/nuewframe/okta-client/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/nuewframe/nfauth/main/install.sh | sh
 ```
 
 Auto-detects your platform (macOS arm64/x64, Linux x64) and installs to `/usr/local/bin`.
@@ -19,14 +19,14 @@ Set `INSTALL_DIR` or `VERSION` to override:
 
 ```bash
 VERSION=v1.2.0 INSTALL_DIR=~/.local/bin \
-  curl -fsSL https://raw.githubusercontent.com/nuewframe/okta-client/main/install.sh | sh
+  curl -fsSL https://raw.githubusercontent.com/nuewframe/nfauth/main/install.sh | sh
 ```
 
 ### From source (Deno required)
 
 ```bash
-git clone https://github.com/nuewframe/okta-client.git
-cd okta-client
+git clone https://github.com/nuewframe/nfauth.git
+cd nfauth
 deno task dev --help
 ```
 

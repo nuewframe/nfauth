@@ -2,7 +2,7 @@
 # install.sh — Install Nuewframe OAuth CLI
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/nuewframe/okta-client/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/nuewframe/nfauth/main/install.sh | sh
 #
 # Options (set via environment variables before piping):
 #   INSTALL_DIR   — Target directory (default: /usr/local/bin, fallback: ~/.local/bin)
@@ -12,11 +12,11 @@
 #
 # Example:
 #   VERSION=v1.2.0 INSTALL_DIR=~/.local/bin \
-#     curl -fsSL https://raw.githubusercontent.com/nuewframe/okta-client/main/install.sh | sh
+#     curl -fsSL https://raw.githubusercontent.com/nuewframe/nfauth/main/install.sh | sh
 
 set -eu
 
-REPO='nuewframe/okta-client'
+REPO='nuewframe/nfauth'
 PROJECT='Nuewframe OAuth CLI'
 BINARY='nfauth'
 

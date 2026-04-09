@@ -303,7 +303,7 @@ A user-facing install script that:
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="nuewframe/okta-client"
+REPO="nuewframe/nfauth"
 BINARY="nfauth"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
