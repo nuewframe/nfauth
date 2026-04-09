@@ -135,7 +135,6 @@ export const loginBrowserCommand = new Command()
         logger.info('  nfauth login code <code>');
         logger.info('or:');
         logger.info('  nfauth login code --url "<full-redirect-url>"');
-        await clearPkceState();
         return;
       }
 

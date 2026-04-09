@@ -91,6 +91,66 @@ interface CdpMessage {
   sessionId?: string;
 }
 
+function normalizePathname(pathname: string): string {
+  if (pathname === '/') {
+    return '/';
+  }
+
+  return pathname.replace(/\/+$/, '');
+}
+
+function isRedirectNavigationUrl(navigationUrl: URL, redirectUrl: URL): boolean {
+  if (navigationUrl.origin !== redirectUrl.origin) {
+    return false;
+  }
+
+  return normalizePathname(navigationUrl.pathname) === normalizePathname(redirectUrl.pathname);
+}
+
+export function extractCodeFromRedirectNavigation(
+  navigationUrl: string,
+  redirectUri: string,
+  expectedState: string,
+): string | null {
+  let parsedNavigationUrl: URL;
+  let parsedRedirectUri: URL;
+
+  try {
+    parsedNavigationUrl = new URL(navigationUrl);
+  } catch {
+    return null;
+  }
+
+  try {
+    parsedRedirectUri = new URL(redirectUri);
+  } catch {
+    throw new Error(`Invalid redirect URI configured: ${redirectUri}`);
+  }
+
+  if (!isRedirectNavigationUrl(parsedNavigationUrl, parsedRedirectUri)) {
+    return null;
+  }
+
+  const oauthError = parsedNavigationUrl.searchParams.get('error');
+  if (oauthError) {
+    const description = parsedNavigationUrl.searchParams.get('error_description');
+    const suffix = description ? ` - ${description}` : '';
+    throw new Error(`OAuth error: ${oauthError}${suffix}`);
+  }
+
+  const code = parsedNavigationUrl.searchParams.get('code');
+  if (!code) {
+    throw new Error('No authorization code in redirect URL');
+  }
+
+  const state = parsedNavigationUrl.searchParams.get('state');
+  if (state !== expectedState) {
+    throw new Error('State mismatch - possible CSRF attempt');
+  }
+
+  return code;
+}
+
 /**
  * Open a browser-level CDP WebSocket, attach to every page target that appears,
  * and resolve with the authorization code as soon as any page navigates to a URL
@@ -154,14 +214,36 @@ function monitorForCode(
         return;
       }
 
+
+    const maybeResolveFromUrl = (url?: string): boolean => {
+      if (!url) {
+        return false;
+      }
+
+      try {
+        const code = extractCodeFromRedirectNavigation(url, redirectUri, expectedState);
+        if (!code) {
+          return false;
+        }
+
+        settle(() => resolve(code));
+        return true;
+      } catch (error) {
+        settle(() => reject(error instanceof Error ? error : new Error(String(error))));
+        return true;
+      }
+    };
       const { method, params, sessionId } = msg;
 
       // ── Target discovered ── attach to every page target
       if (method === 'Target.targetCreated' || method === 'Target.targetInfoChanged') {
         const { targetInfo } = params as {
-          targetInfo: { type: string; targetId: string };
+          targetInfo: { type: string; targetId: string; url?: string };
         };
         if (targetInfo.type === 'page') {
+          if (maybeResolveFromUrl(targetInfo.url)) {
+            return;
+          }
           send('Target.attachToTarget', { targetId: targetInfo.targetId, flatten: true });
         }
       }
@@ -170,9 +252,12 @@ function monitorForCode(
       if (method === 'Target.attachedToTarget') {
         const { sessionId: sid, targetInfo } = params as {
           sessionId: string;
-          targetInfo: { type: string };
+          targetInfo: { type: string; url?: string };
         };
         if (targetInfo.type === 'page') {
+          if (maybeResolveFromUrl(targetInfo.url)) {
+            return;
+          }
           attachedSessions.add(sid);
           send('Page.enable', {}, sid);
         }
@@ -186,37 +271,7 @@ function monitorForCode(
         // Ignore iframe navigations (parentId is set for iframes)
         if (frame.parentId) return;
 
-        if (frame.url.startsWith(redirectUri)) {
-          settle(() => {
-            try {
-              const parsed = new URL(frame.url);
-              const oauthError = parsed.searchParams.get('error');
-              if (oauthError) {
-                reject(
-                  new Error(
-                    `OAuth error: ${oauthError} — ${
-                      parsed.searchParams.get('error_description') ?? ''
-                    }`,
-                  ),
-                );
-                return;
-              }
-              const code = parsed.searchParams.get('code');
-              const state = parsed.searchParams.get('state');
-              if (!code) {
-                reject(new Error('No authorization code in redirect URL'));
-                return;
-              }
-              if (state !== expectedState) {
-                reject(new Error('State mismatch — possible CSRF attempt'));
-                return;
-              }
-              resolve(code);
-            } catch (e) {
-              reject(e instanceof Error ? e : new Error(String(e)));
-            }
-          });
-        }
+        maybeResolveFromUrl(frame.url);
       }
     };
 

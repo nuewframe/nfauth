@@ -35,6 +35,21 @@ export const loginCodeCommand = new Command()
     const logger = createLoggerFromOptions(options as unknown as LoggingOptions);
     try {
       const commandOptions = options as unknown as LoginCommandOptions;
+      const redirectUrl = commandOptions.url?.trim();
+      let code = codeArg;
+
+      // Parse redirect URLs before loading pending state so OAuth errors
+      // (e.g. invalid_scope) are reported directly instead of being masked.
+      if (!code && redirectUrl) {
+        code = parseCodeFromRedirectUrl(redirectUrl);
+      }
+
+      if (!code) {
+        throw new Error(
+          'No authorization code provided. Use login code <code> or --url <full-url>.',
+        );
+      }
+
       const pending = await loadPkceState();
       assertPendingLoginStateValid(pending);
 
@@ -95,16 +110,9 @@ export const loginCodeCommand = new Command()
         customRequestHeaders: resolvedConfig.customRequestHeaders,
       });
 
-      let code = codeArg;
-
-      if (!code && commandOptions.url) {
-        code = parseCodeFromRedirectUrl(commandOptions.url, pending.state);
-      }
-
-      if (!code) {
-        throw new Error(
-          'No authorization code provided. Use login code <code> or --url <full-url>.',
-        );
+      // Re-parse with state validation once pending transaction state is loaded.
+      if (redirectUrl) {
+        code = parseCodeFromRedirectUrl(redirectUrl, pending.state);
       }
 
       logger.info('Exchanging authorization code for tokens...');
