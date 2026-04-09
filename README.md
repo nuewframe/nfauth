@@ -48,11 +48,11 @@ Tokens are written to `~/.nuewframe/credential.json` so other tools can reuse th
 
 ## Choose Your Flow
 
-| Goal | Command | When to use it |
-| --- | --- | --- |
-| Interactive end-user login | `nfauth login browser` | You can launch a browser and receive the callback locally |
-| Headless or remote login | `nfauth login url` then `nfauth login code` | You need to copy the auth URL or paste back the redirect result |
-| Machine-to-machine token | `nfauth service token` | You need client credentials without an end user |
+| Goal                       | Command                                     | When to use it                                                  |
+| -------------------------- | ------------------------------------------- | --------------------------------------------------------------- |
+| Interactive end-user login | `nfauth login browser`                      | You can launch a browser and receive the callback locally       |
+| Headless or remote login   | `nfauth login url` then `nfauth login code` | You need to copy the auth URL or paste back the redirect result |
+| Machine-to-machine token   | `nfauth service token`                      | You need client credentials without an end user                 |
 
 Use `nfauth <command> --help` for command-specific options and overrides.
 
@@ -167,13 +167,13 @@ nfauth token userinfo
 
 All commands accept:
 
-| Flag | Description |
-| --- | --- |
-| `-e, --env <env>` | Auth environment override |
-| `-p, --profile <profile>` | Config profile override |
-| `--env-file <path>` | Config YAML file path override |
-| `-v, --verbose` | Enable debug output |
-| `--log-level none\|info\|debug` | Log verbosity level |
+| Flag                            | Description                    |
+| ------------------------------- | ------------------------------ |
+| `-e, --env <env>`               | Auth environment override      |
+| `-p, --profile <profile>`       | Config profile override        |
+| `--env-file <path>`             | Config YAML file path override |
+| `-v, --verbose`                 | Enable debug output            |
+| `--log-level none\|info\|debug` | Log verbosity level            |
 
 ### Advanced request overrides
 
