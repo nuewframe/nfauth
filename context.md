@@ -76,24 +76,28 @@ Location: `~/.nuewframe/nfauth/config.yaml`
 
 ```yaml
 security:
+  env: dev
+  profile: default
   auth:
     dev:
       default:
-        domain: https://your-oauth-domain.example.com
-        clientId: your-client-id
-        auth:
-          type: OAuth2
-          clientSecret: your-client-secret
-        redirectUri: http://localhost:7879/callback
-        scope: openid profile email
-current:
-  env: dev
-  profile: default
+        type: oauth2
+        provider:
+          issuer_uri: https://your-oauth-domain.example.com/oauth2/default
+          discovery_url: /.well-known/openid-configuration
+        client:
+          client_id: your-client-id
+          client_secret: your-client-secret
+          client_authentication_method: basic
+          grant_type: authorization_code
+          redirect_uri: http://localhost:7879/callback
+          scope: openid profile email
 ```
 
-- `env` selects the top-level key under `security.auth`
-- `profile` selects the key under `security.auth.<env>`
-- Commands accept `--env` and `--profile` to override `current`
+- `security.env` selects the active top-level key under `security.auth`
+- `security.profile` selects the active key under `security.auth.<env>`
+- Commands accept `--env` and `--profile` to override active selection
+- `provider.discovery_url` is optional; when omitted, the CLI derives `/.well-known/openid-configuration` from `issuer_uri`
 
 ## Key Files
 

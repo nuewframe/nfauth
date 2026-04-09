@@ -5,7 +5,7 @@ import {
   getCurrentAuthConfig,
   loadConfig,
   resolveConfigSelection,
-  resolveOAuthExecutionConfig,
+  resolveOAuthExecutionConfigWithDiscovery,
   validateOAuthExecutionConfig,
 } from '../config/app.config.ts';
 import { createLoggerFromOptions, type LoggingOptions } from '../utils/logger.ts';
@@ -63,7 +63,7 @@ export const clientCredentialsCommand = new Command()
 
       // Validate execution-stage config (grant-specific required fields, safety rules)
       const baseConfig = {
-        ...resolveOAuthExecutionConfig(authConfig, 'client_credentials'),
+        ...await resolveOAuthExecutionConfigWithDiscovery(authConfig, 'client_credentials'),
         scope,
       };
       const mode = options.clientCredentialsMode?.trim();
@@ -78,7 +78,7 @@ export const clientCredentialsCommand = new Command()
         tokenUrl: options.tokenUrl?.trim() || undefined,
         clientId: options.clientId?.trim() || undefined,
         clientSecret: options.clientSecret?.trim() || undefined,
-        clientCredentialsMode: mode as 'basic' | 'in_body' | 'none' | undefined,
+        clientAuthenticationMethod: mode as 'basic' | 'in_body' | 'none' | undefined,
         scope,
         ...buildOAuthMetadataOverrides(options),
       });
@@ -97,7 +97,7 @@ export const clientCredentialsCommand = new Command()
         clientId: resolvedConfig.clientId,
         clientSecret: resolvedConfig.clientSecret,
         scope: resolvedConfig.scope,
-        clientCredentialsMode: resolvedConfig.clientCredentialsMode,
+        clientCredentialsMode: resolvedConfig.clientAuthenticationMethod,
         customRequestParameters: resolvedConfig.customRequestParameters,
         customRequestHeaders: resolvedConfig.customRequestHeaders,
       });
@@ -105,8 +105,8 @@ export const clientCredentialsCommand = new Command()
       logger.info('Getting client credentials token...');
       logger.info(`Environment: ${selection.env}`);
       logger.info(`Profile: ${selection.profile}`);
-      logger.info(`Domain: ${authConfig.domain}`);
-      logger.info(`Client ID: ${authConfig.clientId}`);
+      logger.info(`Issuer: ${authConfig.provider.issuer_uri}`);
+      logger.info(`Client ID: ${authConfig.client.client_id}`);
       logger.info(`Scope: ${scope}`);
 
       const tokens = await oauthService.getClientCredentialsTokens(scope);

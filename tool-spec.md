@@ -4,13 +4,13 @@
 
 Every subcommand inherits these options (declared with `.globalOption` on the root command):
 
-| Flag                      | Type              | Default                  | Description                                  |
-| ------------------------- | ----------------- | ------------------------ | -------------------------------------------- |
-| `-e, --env <env>`         | string            | config `current.env`     | Auth environment to use                      |
-| `-p, --profile <profile>` | string            | config `current.profile` | Config profile                               |
-| `-v, --verbose`           | boolean           | false                    | Enable verbose (debug) output                |
-| `--log-level <level>`     | none\|info\|debug | info                     | Log verbosity                                |
-| `--env-file <path>`       | string            | —                        | Path to config YAML file (overrides default) |
+| Flag                      | Type              | Default                   | Description                                  |
+| ------------------------- | ----------------- | ------------------------- | -------------------------------------------- |
+| `-e, --env <env>`         | string            | config `security.env`     | Auth environment to use                      |
+| `-p, --profile <profile>` | string            | config `security.profile` | Config profile                               |
+| `-v, --verbose`           | boolean           | false                     | Enable verbose (debug) output                |
+| `--log-level <level>`     | none\|info\|debug | info                      | Log verbosity                                |
+| `--env-file <path>`       | string            | —                         | Path to config YAML file (overrides default) |
 
 ---
 
@@ -191,21 +191,25 @@ Print the current config file as JSON.
 nfauth config show
 ```
 
-#### `config add <domain> <clientId> <clientSecret>`
+#### `config add <issuerUri> <clientId> [clientSecret]`
 
 Add a new environment/profile entry.
 
 ```
-nfauth config add <domain> <clientId> <clientSecret> [options]
+nfauth config add <issuerUri> <clientId> [clientSecret] [options]
 ```
 
-| Option                    | Type   | Default                | Description        |
-| ------------------------- | ------ | ---------------------- | ------------------ |
-| `-e, --env <env>`         | string | `dev`                  | Environment name   |
-| `-p, --profile <profile>` | string | `default`              | Profile name       |
-| `--redirect-uri <uri>`    | string | _required_             | OAuth redirect URI |
-| `--scope <scope>`         | string | `openid profile email` | OAuth scopes       |
-| `--discovery-url <url>`   | string | —                      | OIDC discovery URL |
+| Option                          | Type   | Default                             | Description                                                        |
+| ------------------------------- | ------ | ----------------------------------- | ------------------------------------------------------------------ |
+| `-e, --env <env>`               | string | `dev`                               | Environment name                                                   |
+| `-p, --profile <profile>`       | string | `default`                           | Profile name                                                       |
+| `--redirect-uri <uri>`          | string | _required_                          | OAuth redirect URI                                                 |
+| `--scope <scope>`               | string | `openid profile email`              | OAuth scopes                                                       |
+| `--discovery-url <url>`         | string | `/.well-known/openid-configuration` | OIDC discovery URL, absolute or relative to `issuerUri`            |
+| `--authorization-url <url>`     | string | discovery metadata                  | Authorization endpoint URL override                                |
+| `--token-url <url>`             | string | discovery metadata                  | Token endpoint URL override                                        |
+| `--client-auth-method <method>` | string | `basic`                             | Client auth method: `basic`, `in_body`, `none`                     |
+| `--grant-type <grant>`          | string | `authorization_code`                | Grant type: `authorization_code`, `client_credentials`, `password` |
 
 **Example**:
 
@@ -213,6 +217,8 @@ nfauth config add <domain> <clientId> <clientSecret> [options]
 nfauth config add https://my.okta.com abc123 clientsecret \
   --env prod --redirect-uri http://localhost:7879/callback
 ```
+
+When `--authorization-url` and `--token-url` are omitted, the CLI resolves them from the OIDC discovery document.
 
 #### `config set-default`
 

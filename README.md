@@ -262,7 +262,7 @@ Use access tokens for API calls, and use ID token/userinfo only for identity/pro
 nfauth config init                 # create ~/.nuewframe/nfauth/ with starter config
 nfauth config show                 # print current config as JSON
 nfauth config list                 # list all environments and profiles
-nfauth config add <domain> <cid> <client-secret> --redirect-uri <uri>
+nfauth config add <issuer-uri> <cid> [client-secret] --redirect-uri <uri>
 nfauth config set-default --env prod --profile default
 ```
 
@@ -284,20 +284,27 @@ All commands accept:
 
 ```yaml
 security:
+  env: dev
+  profile: default
   auth:
     dev:
       default:
-        domain: https://your-oauth-domain.example.com
-        clientId: your-client-id
-        auth:
-          type: OAuth2
-          clientSecret: your-client-secret
-        redirectUri: http://localhost:7879/callback
-        scope: openid profile email
-current:
-  env: dev
-  profile: default
+        type: oauth2
+        provider:
+          issuer_uri: https://your-oauth-domain.example.com/oauth2/default
+          discovery_url: /.well-known/openid-configuration
+        client:
+          client_id: your-client-id
+          client_secret: your-client-secret
+          client_authentication_method: basic
+          grant_type: authorization_code
+          redirect_uri: http://localhost:7879/callback
+          scope: openid profile email
 ```
+
+`provider.discovery_url` is optional. If you omit it, `nfauth` fetches discovery metadata from
+`issuer_uri + '/.well-known/openid-configuration'`. You can still set `authorization_url` and
+`token_url` explicitly when you need to override the discovery document.
 
 ## Credential File
 
@@ -341,7 +348,7 @@ Symptom:
 Fix:
 
 1. Initialize config: `nfauth config init`
-2. Add an environment entry with `auth.clientSecret`
+2. Add an environment entry with `client.client_secret`
 3. Re-run your command
 
 Validated by integration test:
@@ -389,7 +396,7 @@ Symptom:
 
 Fix:
 
-1. Set `redirectUri` in selected env/profile entry in `config.yaml`
+1. Set `client.redirect_uri` in selected env/profile entry in `config.yaml`
 2. Or pass `--redirect-uri` at command time
 
 Validated by integration test:
@@ -400,11 +407,11 @@ Validated by integration test:
 
 Symptom:
 
-- `clientSecret is required when clientCredentialsMode is basic or in_body`
+- `clientSecret is required when clientAuthenticationMethod is basic or in_body`
 
 Fix:
 
-1. Set `auth.clientSecret` in config
+1. Set `client.client_secret` in config
 2. Or pass `--client-secret` at command time
 3. If using a public-client pattern, set `--client-credentials-mode none`
 

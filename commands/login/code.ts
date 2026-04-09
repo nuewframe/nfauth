@@ -4,7 +4,7 @@ import {
   applyOAuthExecutionOverrides,
   getCurrentAuthConfig,
   loadConfig,
-  resolveOAuthExecutionConfig,
+  resolveOAuthExecutionConfigWithDiscovery,
   validateOAuthExecutionConfig,
 } from '../../config/app.config.ts';
 import { saveCredentials } from '../../utils/credentials.ts';
@@ -35,6 +35,21 @@ export const loginCodeCommand = new Command()
     const logger = createLoggerFromOptions(options as unknown as LoggingOptions);
     try {
       const commandOptions = options as unknown as LoginCommandOptions;
+      const redirectUrl = commandOptions.url?.trim();
+      let code = codeArg;
+
+      // Parse redirect URLs before loading pending state so OAuth errors
+      // (e.g. invalid_scope) are reported directly instead of being masked.
+      if (!code && redirectUrl) {
+        code = parseCodeFromRedirectUrl(redirectUrl);
+      }
+
+      if (!code) {
+        throw new Error(
+          'No authorization code provided. Use login code <code> or --url <full-url>.',
+        );
+      }
+
       const pending = await loadPkceState();
       assertPendingLoginStateValid(pending);
 
@@ -57,7 +72,7 @@ export const loginCodeCommand = new Command()
 
       // Validate execution-stage config (grant-specific required fields, safety rules)
       const baseConfig = {
-        ...resolveOAuthExecutionConfig(authConfig, 'authorization_code'),
+        ...await resolveOAuthExecutionConfigWithDiscovery(authConfig, 'authorization_code'),
         redirectUrl: pending.redirectUri,
         scope: pending.scope,
       };
@@ -72,7 +87,7 @@ export const loginCodeCommand = new Command()
         tokenUrl: commandOptions.tokenUrl?.trim() || undefined,
         clientId: commandOptions.clientId?.trim() || undefined,
         clientSecret: commandOptions.clientSecret?.trim() || undefined,
-        clientCredentialsMode: mode as 'basic' | 'in_body' | 'none' | undefined,
+        clientAuthenticationMethod: mode as 'basic' | 'in_body' | 'none' | undefined,
         ...buildOAuthMetadataOverrides(commandOptions),
       });
       validateOAuthExecutionConfig(resolvedConfig, 'security.auth');
@@ -90,27 +105,20 @@ export const loginCodeCommand = new Command()
         clientId: resolvedConfig.clientId,
         clientSecret: resolvedConfig.clientSecret,
         scope: resolvedConfig.scope,
-        clientCredentialsMode: resolvedConfig.clientCredentialsMode,
+        clientCredentialsMode: resolvedConfig.clientAuthenticationMethod,
         customRequestParameters: resolvedConfig.customRequestParameters,
         customRequestHeaders: resolvedConfig.customRequestHeaders,
       });
 
-      let code = codeArg;
-
-      if (!code && commandOptions.url) {
-        code = parseCodeFromRedirectUrl(commandOptions.url, pending.state);
-      }
-
-      if (!code) {
-        throw new Error(
-          'No authorization code provided. Use login code <code> or --url <full-url>.',
-        );
+      // Re-parse with state validation once pending transaction state is loaded.
+      if (redirectUrl) {
+        code = parseCodeFromRedirectUrl(redirectUrl, pending.state);
       }
 
       logger.info('Exchanging authorization code for tokens...');
       logger.info(`Environment: ${pending.env}`);
       logger.info(`Profile: ${pendingProfile}`);
-      logger.info(`Domain: ${authConfig.domain}`);
+      logger.info(`Issuer: ${authConfig.provider.issuer_uri}`);
 
       const tokens = await oauthService.exchangeCodeForTokens(code, pending.codeVerifier);
       await saveCredentials(tokens);
