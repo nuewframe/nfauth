@@ -81,6 +81,17 @@ Once tests are green, execute the planned refactor and rerun tests and quality c
 
 Always enable `strict: true`. This catches null-safety issues, implicit `any`, and unused variables at compile time.
 
+### Parse-Boundary Normalization (Preferred)
+
+For config and other external payloads, normalize legacy fields at the boundary:
+
+1. Parse into `unknown`.
+2. Map to a temporary raw migration type (can include typo/legacy aliases).
+3. Convert once into strict domain types.
+4. Run validation on the canonical shape.
+
+Avoid mutating strict domain objects by casting to generic maps like `Record<string, unknown>`. Keep migration logic isolated and removable.
+
 ### Error types
 
 Always guard unknown error types:

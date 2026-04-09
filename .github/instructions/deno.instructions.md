@@ -52,6 +52,15 @@ From `deno.json`:
 
 Never use `// @ts-ignore` or `// @ts-nocheck` without a comment explaining why.
 
+## Parse-Boundary Normalization (Preferred)
+
+When reading YAML/JSON config, normalize and migrate legacy/typo fields at the parsing boundary (`unknown` -> raw migration shape -> strict domain type).
+
+- Keep domain interfaces strict (no broad index signatures just to support migration paths).
+- Avoid mutating strict typed objects via `as Record<string, unknown>`.
+- Introduce temporary raw types for backward compatibility fields and map them into canonical fields before validation.
+- Validate only after normalization to ensure a single canonical schema is enforced downstream.
+
 ## Import Rules
 
 ### Correct patterns

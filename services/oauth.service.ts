@@ -86,8 +86,8 @@ export class OAuthService {
       code,
     });
 
-    const sendBasicCredentials =
-      this.config.clientCredentialsMode === 'basic' && !!this.config.clientSecret;
+    const sendBasicCredentials = this.config.clientCredentialsMode === 'basic' &&
+      !!this.config.clientSecret;
 
     if (!sendBasicCredentials) {
       body.set('client_id', this.config.clientId);

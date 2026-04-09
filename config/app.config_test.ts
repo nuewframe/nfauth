@@ -160,7 +160,7 @@ Deno.test('Config - loadUnifiedConfig reads unified config from file', () => {
   });
 });
 
-Deno.test('Config - loadUnifiedConfig normalizes client_authenication_method typo', () => {
+Deno.test('Config - loadUnifiedConfig rejects unrecognized client keys (typo)', () => {
   withTempHome((tempHome) => {
     Deno.mkdirSync(`${tempHome}/.nuewframe/nfauth`, { recursive: true });
     Deno.writeTextFileSync(
@@ -187,12 +187,14 @@ Deno.test('Config - loadUnifiedConfig normalizes client_authenication_method typ
       ].join('\n'),
     );
 
-    const config = loadUnifiedConfig();
+    const error = assertThrows(
+      () => loadUnifiedConfig(),
+      Error,
+    );
 
-    assertExists(config);
-    assertEquals(
-      config?.security.auth.qa.api.client.client_authentication_method,
-      'in_body',
+    assertStringIncludes(
+      error.message,
+      'security.auth.[env].[profile].client has unrecognized key(s): client_authenication_method',
     );
   });
 });

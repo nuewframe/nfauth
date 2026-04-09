@@ -123,6 +123,55 @@ export interface AppConfig {
   };
 }
 
+interface RawClientConfig extends Omit<ClientConfig, 'client_authentication_method'> {
+  client_authentication_method?: ClientAuthenticationMethod;
+}
+
+interface RawAuthProfileConfig extends Omit<AuthProfileConfig, 'client'> {
+  client: RawClientConfig;
+}
+
+type RawEnvironmentRegistry = Record<string, Record<string, RawAuthProfileConfig>>;
+
+interface RawAppConfig {
+  security?: {
+    env?: string;
+    profile?: string;
+    auth?: RawEnvironmentRegistry;
+  };
+}
+
+type KeySchema<T> = {
+  [K in keyof T]-?: true | KeySchema<NonNullable<T[K]>>;
+};
+
+const RAW_AUTH_PROFILE_KEY_SCHEMA = {
+  type: true,
+  provider: {
+    issuer_uri: true,
+    discovery_url: true,
+    authorization_url: true,
+    token_url: true,
+    device_auth_url: true,
+  },
+  client: {
+    client_id: true,
+    client_secret: true,
+    client_authentication_method: true,
+    grant_type: true,
+    redirect_uri: true,
+    scope: true,
+  },
+  options: {
+    pkce: true,
+    acquire_automatically: true,
+    custom_request_parameters: true,
+    custom_request_headers: true,
+    password_env_var: true,
+    password_prompt_visible: true,
+  },
+} satisfies KeySchema<RawAuthProfileConfig>;
+
 export interface ConfigSelection {
   env: string;
   profile: string;
@@ -347,20 +396,74 @@ function normalizePkceOption(
   };
 }
 
-function normalizeClientAuthMethodTypos(config: AppConfig): void {
-  for (const profiles of Object.values(config.security.auth)) {
-    for (const profile of Object.values(profiles)) {
-      const client = profile.client as Record<string, unknown>;
-      if (
-        client.client_authentication_method === undefined &&
-        typeof client.client_authenication_method === 'string'
-      ) {
-        client.client_authentication_method = client.client_authenication_method;
-      }
+function assertNoUnknownKeys<T extends object>(
+  value: unknown,
+  schema: KeySchema<T>,
+  path: string,
+): void {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return;
+  }
 
-      delete client.client_authenication_method;
+  const record = value as Record<string, unknown>;
+  const schemaRecord = schema as Record<string, true | KeySchema<object>>;
+  const allowedKeys = Object.keys(schemaRecord);
+  const unknownKeys = Object.keys(record).filter((key) => !allowedKeys.includes(key));
+  if (unknownKeys.length > 0) {
+    throw new Error(
+      `Configuration error: ${path} has unrecognized key(s): ${unknownKeys.join(', ')}`,
+    );
+  }
+
+  for (const key of allowedKeys) {
+    const childSchema = schemaRecord[key];
+    if (childSchema === true) {
+      continue;
+    }
+
+    if (record[key] !== undefined) {
+      assertNoUnknownKeys(record[key], childSchema, `${path}.${key}`);
     }
   }
+}
+
+function normalizeRawAuthProfileConfig(profile: RawAuthProfileConfig): AuthProfileConfig {
+  assertNoUnknownKeys(profile, RAW_AUTH_PROFILE_KEY_SCHEMA, 'security.auth.[env].[profile]');
+
+  return {
+    ...profile,
+    client: {
+      ...profile.client,
+    },
+  };
+}
+
+function normalizeParsedConfig(rawConfig: unknown): AppConfig {
+  if (!rawConfig || typeof rawConfig !== 'object') {
+    throw new Error('Invalid config file: must be a YAML object');
+  }
+
+  const parsedConfig = rawConfig as RawAppConfig;
+  if (!parsedConfig.security?.auth) {
+    throw new Error('Invalid config structure: missing security.auth');
+  }
+
+  const normalizedAuth: EnvironmentRegistry = {};
+  for (const [envName, profiles] of Object.entries(parsedConfig.security.auth)) {
+    const normalizedProfiles: Record<string, AuthProfileConfig> = {};
+    for (const [profileName, profile] of Object.entries(profiles)) {
+      normalizedProfiles[profileName] = normalizeRawAuthProfileConfig(profile);
+    }
+    normalizedAuth[envName] = normalizedProfiles;
+  }
+
+  return {
+    security: {
+      env: parsedConfig.security.env || 'dev',
+      profile: parsedConfig.security.profile || 'default',
+      auth: normalizedAuth,
+    },
+  };
 }
 
 // ============================================================================
@@ -535,26 +638,7 @@ export function loadUnifiedConfig(): AppConfig | null {
   try {
     const configContent = Deno.readTextFileSync(configPath);
     const rawConfig = parse(configContent) as unknown;
-
-    if (!rawConfig || typeof rawConfig !== 'object') {
-      throw new Error('Invalid config file: must be a YAML object');
-    }
-
-    const config = rawConfig as AppConfig;
-
-    if (!config.security?.auth) {
-      throw new Error('Invalid config structure: missing security.auth');
-    }
-
-    if (!config.security.env) {
-      config.security.env = 'dev';
-    }
-
-    if (!config.security.profile) {
-      config.security.profile = 'default';
-    }
-
-    normalizeClientAuthMethodTypos(config);
+    const config = normalizeParsedConfig(rawConfig);
 
     // Validate all profiles
     for (const [envName, profiles] of Object.entries(config.security.auth)) {
@@ -704,8 +788,6 @@ export function normalizeConfig(config: AppConfig): AppConfig {
   if (!normalized.security.profile) {
     normalized.security.profile = 'default';
   }
-
-  normalizeClientAuthMethodTypos(normalized);
 
   // Validate all profiles
   for (const [envName, profiles] of Object.entries(normalized.security.auth)) {

@@ -94,14 +94,14 @@ If `discovery_url` is not provided, the CLI uses `issuer_uri + '/.well-known/ope
 
 Credentials and flow configurations specific to the registered client application.
 
-| Name                           | Type     | Default Value          | Description                                                                                                                |
-| :----------------------------- | :------- | :--------------------- | :------------------------------------------------------------------------------------------------------------------------- |
-| `client_id`                    | `String` | _None_                 | The public identifier of your client registered with the API provider. Required for all grant types.                       |
-| `client_secret`                | `String` | `""`                   | The confidential identifier used by a client application to authenticate to the authorization server.                      |
+| Name                           | Type     | Default Value          | Description                                                                                                                                               |
+| :----------------------------- | :------- | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `client_id`                    | `String` | _None_                 | The public identifier of your client registered with the API provider. Required for all grant types.                                                      |
+| `client_secret`                | `String` | `""`                   | The confidential identifier used by a client application to authenticate to the authorization server.                                                     |
 | `client_authentication_method` | `String` | `"basic"`              | Dictates how client credentials are sent. Valid values include `none` (for public CLIs), `in_body`, or `basic`. CLI flag mapping: `--client-auth-method`. |
-| `grant_type`                   | `String` | `"authorization_code"` | The method used to get access tokens. Typical values include `authorization_code`, `client_credentials`, or `device_code`. |
-| `redirect_uri`                 | `String` | _None_                 | The client application callback URL to which the request should be redirected after successful authentication.             |
-| `scope`                        | `String` | _None_                 | A space-delimited string of scopes to limit the application's access to the user's account.                                |
+| `grant_type`                   | `String` | `"authorization_code"` | The method used to get access tokens. Typical values include `authorization_code`, `client_credentials`, or `device_code`.                                |
+| `redirect_uri`                 | `String` | _None_                 | The client application callback URL to which the request should be redirected after successful authentication.                                            |
+| `scope`                        | `String` | _None_                 | A space-delimited string of scopes to limit the application's access to the user's account.                                                               |
 
 #### Options Properties: `security.auth.[env].[profile].options`
 
